@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:album_viewer/storage/database.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 
@@ -8,23 +9,49 @@ import 'package:album_viewer/models/album.dart';
 import 'package:album_viewer/models/photo.dart';
 
 class AlbumRepository {
+  final DatabaseHelper databaseHelper = DatabaseHelper.instance;
+
   Future<List<Album>> fetchAlbums() async {
+    // Check for locally cached albums
+    final cachedAlbums = await databaseHelper.fetchAlbums();
+    if (cachedAlbums.isNotEmpty) {
+      return cachedAlbums;
+    }
+
+    // Fetch from API if no local data
     final response = await http
         .get(Uri.parse("https://jsonplaceholder.typicode.com/albums"));
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      return data.map((json) => Album.fromJson(json)).toList();
+      final albums = data.map((json) => Album.fromJson(json)).toList();
+
+      // Save to local database
+      await databaseHelper.insertAlbums(albums);
+
+      return albums;
     } else {
       throw Exception("Failed to fetch albums");
     }
   }
 
   Future<List<Photo>> fetchPhotos(int albumId) async {
+    // Check for locally cached photos
+    final cachedPhotos = await databaseHelper.fetchPhotos(albumId);
+    if (cachedPhotos.isNotEmpty) {
+      return cachedPhotos;
+    }
+
+    // Fetch from API if no local data
     final response = await http.get(Uri.parse(
         "https://jsonplaceholder.typicode.com/photos?albumId=$albumId"));
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      return data.map((json) => Photo.fromJson(json)).toList();
+      final photos = data.map((json) => Photo.fromJson(json)).toList();
+
+      // Save to local database
+      await databaseHelper.insertPhotos(photos);
+
+      return photos;
     } else {
       throw Exception("Failed to fetch photos");
     }

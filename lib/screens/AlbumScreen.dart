@@ -35,23 +35,46 @@ class _AlbumScreenState extends State<AlbumScreen> {
                 final photos = state.albumPhotos[album.id] ?? [];
                 return Column(
                   children: [
-                    Text(album.title),
+                    Row(
+                      children: [
+                        Container(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(
+                              album.title,
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  overflow: TextOverflow.ellipsis),
+                            )),
+                      ],
+                    ),
                     SizedBox(
+                      height: 150,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: photos.length,
                         itemBuilder: (context, index) {
-                          return CachedNetworkImage(
-                            imageUrl: photos[index].url,
-                            placeholder: (context, url) =>
-                                const CircularProgressIndicator(),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.error),
-                          );
-                          ;
+                          return Container(
+                              padding: const EdgeInsets.all(4),
+                              child: CachedNetworkImage(
+                                imageUrl: photos[index].url,
+                                placeholder: (context, url) => const SizedBox(
+                                    height: 150,
+                                    width: 150,
+                                    child: Center(
+                                        child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ))),
+                                errorWidget: (context, url, error) =>
+                                    const SizedBox(
+                                        height: 150,
+                                        width: 150,
+                                        child: Icon(Icons.error)),
+                              ));
                         },
                       ),
                     ),
+                    const Padding(padding: EdgeInsets.only(bottom: 16))
                   ],
                 );
               },
