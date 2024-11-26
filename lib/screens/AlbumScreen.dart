@@ -22,17 +22,30 @@ class _AlbumScreenState extends State<AlbumScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Albums")),
+      appBar: AppBar(
+        title: const Text("Albums"),
+        actions: [
+          TextButton(
+              onPressed: () {
+                context.read<AlbumBloc>().add(ClearCache());
+                context.read<AlbumBloc>().add(FetchAlbums());
+              },
+              child: const Text("Clear cache"))
+        ],
+      ),
       body: BlocBuilder<AlbumBloc, AlbumState>(
         builder: (context, state) {
           if (state is AlbumLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is AlbumLoaded) {
             return ListView.builder(
-              itemCount: state.albums.length,
+              itemCount: state.albums.length * 1000,
               itemBuilder: (context, index) {
-                final album = state.albums[index];
+                // get the cyclic index
+                final cyclicAlbumIndex = index % state.albums.length;
+                final album = state.albums[cyclicAlbumIndex];
                 final photos = state.albumPhotos[album.id] ?? [];
+
                 return Column(
                   children: [
                     Row(
@@ -52,12 +65,13 @@ class _AlbumScreenState extends State<AlbumScreen> {
                       height: 150,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: photos.length,
+                        itemCount: photos.length * 5000,
                         itemBuilder: (context, index) {
+                          final cyclicPhotosIndex = index % photos.length;
                           return Container(
                               padding: const EdgeInsets.all(4),
                               child: CachedNetworkImage(
-                                imageUrl: photos[index].url,
+                                imageUrl: photos[cyclicPhotosIndex].url,
                                 placeholder: (context, url) => const SizedBox(
                                     height: 150,
                                     width: 150,

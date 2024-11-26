@@ -19,8 +19,9 @@ class AlbumRepository {
     }
 
     // Fetch from API if no local data
+    // Fetch only data for userId `1` to avoid long list of data
     final response = await http
-        .get(Uri.parse("https://jsonplaceholder.typicode.com/albums"));
+        .get(Uri.parse("https://jsonplaceholder.typicode.com/albums?userId=1"));
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
       final albums = data.map((json) => Album.fromJson(json)).toList();
@@ -43,7 +44,7 @@ class AlbumRepository {
 
     // Fetch from API if no local data
     final response = await http.get(Uri.parse(
-        "https://jsonplaceholder.typicode.com/photos?albumId=$albumId"));
+        "https://jsonplaceholder.typicode.com/photos?albumId=$albumId&userId=1"));
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
       final photos = data.map((json) => Photo.fromJson(json)).toList();
@@ -55,6 +56,10 @@ class AlbumRepository {
     } else {
       throw Exception("Failed to fetch photos");
     }
+  }
+
+  void clearCache() async {
+    await databaseHelper.clearData();
   }
 }
 
@@ -77,6 +82,10 @@ class AlbumBloc extends Bloc<AlbumEvent, AlbumState> {
       } catch (e) {
         emit(AlbumError("Failed to loads albums."));
       }
+    });
+
+    on<ClearCache>((event, emit) {
+      albumRepository.clearCache();
     });
   }
 }
